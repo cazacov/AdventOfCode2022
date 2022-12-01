@@ -12,6 +12,7 @@ namespace AdventOfCode2022.Day01
             Console.WriteLine("Advent of Code 2022, Day 1");
             var input = ReadInput("input.txt");
             Console.WriteLine(input.Max());
+            Console.WriteLine(input.OrderByDescending(_ => _).Take(3).Sum());
         }
 
         private static List<int> ReadInput(string fileName)
