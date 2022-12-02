@@ -73,7 +73,22 @@ namespace Day02
 
 
             this.First = their[first];
-            this.Second = our[second];
+
+
+            if (second == "Y")
+            {
+                this.Second = this.First;
+            } else
+            if (second == "X")
+            {
+                this.Second = HowToLose(First);
+            }
+            else
+            {
+                this.Second = HowToWin(First);
+            }
+
+//            this.Second = our[second];
             if (First == Second)
             {
                 GameResult = GameResult.Draw;
@@ -88,6 +103,32 @@ namespace Day02
             {
                 GameResult = GameResult.Lost;
             }
+        }
+
+        private Choice HowToLose(Choice other)
+        {
+            if (other == Choice.Paper)
+            {
+                return Choice.Rock;
+            } 
+            else if (other == Choice.Rock)
+            {
+                return Choice.Scisors;
+            }
+            else return Choice.Paper;
+        }
+
+        private Choice HowToWin(Choice other)
+        {
+            if (other == Choice.Paper)
+            {
+                return Choice.Scisors;
+            }
+            else if (other == Choice.Rock)
+            {
+                return Choice.Paper;
+            }
+            else return Choice.Rock;
         }
 
         private GameResult GameResult;
