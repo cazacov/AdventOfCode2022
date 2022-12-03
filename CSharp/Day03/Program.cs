@@ -13,8 +13,8 @@ namespace Day03
             var input = ReadInput("input.txt");
 
             Console.WriteLine("Puzzle 1");
-            var total = 0;
-            foreach (var ruck in input)
+
+            var result = input.Sum(ruck =>
             {
                 var first = ruck[..(ruck.Length / 2)];
                 var second = ruck[(ruck.Length / 2)..];
@@ -23,33 +23,26 @@ namespace Day03
                 var secondItems = new HashSet<char>(second);
 
                 firstItems.IntersectWith(secondItems);
+                return firstItems.Sum(Score);
+            });
+            Console.WriteLine(result);
 
-                var score = firstItems.Sum(Score);
-                total += score;
-            }
-            Console.WriteLine(total);
 
             Console.WriteLine("Puzzle 2");
-            total = 0;
-            var groupCounter = 0;
-            HashSet<char> badge = null;
-            foreach(var ruck in input)
+            var groups = input
+                .Select((x, i) => new {Index = i, Ruck = x})
+                .GroupBy(x => x.Index / 3);
+
+            result = groups.Sum(group =>
             {
-                if (groupCounter++ == 0)
+                var badge = new HashSet<char>(group.First().Ruck);
+                foreach (var ruck in group.Select(x => x.Ruck))
                 {
-                    badge = new HashSet<char>(ruck);
-                    continue;
+                    badge.IntersectWith(new HashSet<char>(ruck));
                 }
-
-                badge.IntersectWith(new HashSet<char>(ruck));
-
-                if (groupCounter == 3)
-                {
-                    total += Score(badge.First());
-                    groupCounter = 0;
-                }
-            }
-            Console.WriteLine(total);
+                return Score(badge.First());
+            });
+            Console.WriteLine(result);
         }
 
         public static int Score(char ch)
