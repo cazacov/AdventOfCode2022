@@ -11,16 +11,15 @@ namespace Day02
             Console.WriteLine("Advent of Code 2022, Day 2");
             
             var input = ReadInput("input.txt");
-            Console.WriteLine(input.Sum(x => x.Score));
+            Console.WriteLine(input.Sum(game => game.Score));
         }
 
-        private static List<Game> ReadInput(string fileName)
+        private static IEnumerable<Game> ReadInput(string fileName)
         {
             return System.IO.File.ReadAllLines(fileName)
                 .Select(line => 
                     new Game(line[0], line[2])
-                )
-                .ToList();
+                );
         }
     }
 
@@ -39,7 +38,7 @@ namespace Day02
             // Puzzle 2
             switch (second)
             {
-                case 'X':   // Lose
+                case 'X':   // Loss
                     My = (Their + 2) % 3;
                     break;
                 case 'Y':   // Draw
