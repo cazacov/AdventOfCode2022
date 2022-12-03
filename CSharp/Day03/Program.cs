@@ -12,45 +12,56 @@ namespace Day03
 
             var input = ReadInput("input.txt");
 
+            Console.WriteLine("Puzzle 1");
             var total = 0;
-            foreach (var rueck in input)
+            foreach (var ruck in input)
             {
-                var first = rueck.Substring(0, rueck.Length / 2);
-                var second = rueck.Substring(rueck.Length / 2);
+                var first = ruck[..(ruck.Length / 2)];
+                var second = ruck[(ruck.Length / 2)..];
 
-                String common = "";
-                foreach (var ch in first)
-                {
-                    if (second.Contains(ch))
-                    {
-                        common += ch;
-                    }
-                }
+                var firstItems = new HashSet<char>(first);
+                var secondItems = new HashSet<char>(second);
 
-                string counted = "";
+                firstItems.IntersectWith(secondItems);
 
-                int score = 0;
-                foreach (var ch in common)
-                {
-                    if (counted.Contains(ch))
-                    {
-                        continue;
-                    }
-                    if (ch >= 'a' && ch <= 'z')
-                    {
-                        score += ch - 'a' + 1;
-                    }
-                    else
-                    {
-                        score += ch - 'A' + 27;
-                    }
-
-                    counted += ch;
-                }
-                Console.WriteLine($"Score of {rueck} = {score}");
+                var score = firstItems.Sum(Score);
                 total += score;
             }
             Console.WriteLine(total);
+
+            Console.WriteLine("Puzzle 2");
+            total = 0;
+            var groupCounter = 0;
+            HashSet<char> badge = null;
+            foreach(var ruck in input)
+            {
+                if (groupCounter++ == 0)
+                {
+                    badge = new HashSet<char>(ruck);
+                    continue;
+                }
+
+                badge.IntersectWith(new HashSet<char>(ruck));
+
+                if (groupCounter == 3)
+                {
+                    total += Score(badge.First());
+                    groupCounter = 0;
+                }
+            }
+            Console.WriteLine(total);
+        }
+
+        public static int Score(char ch)
+        {
+            if (ch >= 'a' && ch <= 'z')
+            {
+                return ch - 'a' + 1;
+            }
+            else
+            {
+                return ch - 'A' + 27;
+            }
         }
 
         private static List<String> ReadInput(string fileName)
