@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using static System.Int32;
 
 namespace Day05
 {
@@ -12,60 +13,85 @@ namespace Day05
         {
             Console.WriteLine("Advent of Code 2022, Day 5");
 
-            var input = ReadInput("input.txt");
-
-            var stacks = new Dictionary<int, List<char>>();
-            for (int j = 1; j <= 9; j++)
+            ReadInput(out var stacks, out var moves);
+            foreach (var move in moves)
             {
-                stacks[j] = new List<char>();
+                stacks[move.To].InsertRange(0, stacks[move.From].Take(move.Count).Reverse());
+                stacks[move.From].RemoveRange(0, move.Count);
             }
+            PrintAnswer("Puzzle 1: ", stacks);
 
-            for (var i = 0; i < 8; i++)
+            ReadInput(out stacks, out moves);
+            foreach (var move in moves)
             {
-                var line = input[i];
-
-                for (int j = 0; j < 9; j++)
-                {
-                    var ch = line.Substring(j * 4 + 1, 1)[0];
-                    if (ch != ' ')
-                    {
-                        stacks[j+1].Add(ch);
-                    }
-                }
+                stacks[move.To].InsertRange(0, stacks[move.From].Take(move.Count));
+                stacks[move.From].RemoveRange(0, move.Count);
             }
+            PrintAnswer("Puzzle 2: ", stacks);
+        }
 
-            var li = input.Skip(10);
-
-            var regex = new Regex(@"move (\d+) from (\d+) to (\d+)");
-            foreach (var line in li)
+        private static void PrintAnswer(string title, Dictionary<int, List<char>> stacks)
+        {
+            Console.Write(title);
+            for (int i = 0; i < stacks.Count; i++)
             {
-                var match = regex.Match(line);
-                var count = Int32.Parse(match.Groups[1].Value);
-                var from = Int32.Parse(match.Groups[2].Value);
-                var to = Int32.Parse(match.Groups[3].Value);
-
-                for (int i = 0; i < count; i++)
-                {
-                    var ch = stacks[from].First();
-                    stacks[to].Insert(0, ch);
-                    stacks[from].RemoveAt(0);
-                }
-
-            }
-
-            Console.Write("Puzzle 1: ");
-            for (int i = 1; i <= 9; i++)
-            {
-                Console.Write(stacks[i].First());
+                Console.Write(stacks[i + 1].First());
             }
             Console.WriteLine();
         }
 
-        private static List<string> ReadInput(string fileName)
+        private static void ReadInput(out Dictionary<int, List<char>> stacks, out List<Movement> moves)
         {
-            var input = File.ReadAllLines(fileName);
-            var result = input.ToList();
-            return result;
+            var input = File.ReadAllLines("input.txt");
+
+            // Read header
+            stacks = new Dictionary<int, List<char>>();
+            var headerLines = 0;
+            foreach (var line in input)
+            {
+                headerLines++;
+                if (char.IsDigit(line[1]))
+                {
+                    headerLines += 1;
+                    break;
+                }
+
+                for (var j = 0; j < (line.Length + 1) / 4; j++)
+                {
+                    if (!stacks.ContainsKey(j + 1))
+                    {
+                        stacks[j + 1] = new List<char>();
+                    }
+
+                    var ch = line.Substring(j * 4 + 1, 1)[0];
+                    if (ch != ' ')
+                    {
+                        stacks[j + 1].Add(ch);
+                    }
+                }
+            }
+
+            // read moves
+            var moveLines = input.Skip(headerLines);
+            moves = new List<Movement>();
+            var regex = new Regex(@"move (\d+) from (\d+) to (\d+)");
+            foreach (var line in moveLines)
+            {
+                var match = regex.Match(line);
+                moves.Add(new Movement()
+                {
+                    Count = Parse(match.Groups[1].Value), 
+                    From = Parse(match.Groups[2].Value), 
+                    To = Parse(match.Groups[3].Value)
+                });
+            }
         }
+    }
+
+    internal class Movement
+    {
+        public int Count { get; set; }
+        public int From { get; set; }
+        public int To { get; set; }
     }
 }
