@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -12,28 +11,33 @@ namespace Day09
     {
         static void Main(string[] args)
         {
+            // const int RopeLength = 2;    // Puzzle 1
+            const int RopeLength = 10;      // Puzzle 2
+
             Console.WriteLine("Advent of Code 2022, Day 9");
 
             var input = ReadInput("input.txt");
 
-            HashSet<Pos> visited = new HashSet<Pos>();
-
-            var head = new Pos(0, 0);
-            var tail = new Pos(0, 0);
-
-            visited.Add(tail);
+            var visited = new HashSet<Pos>();
+            var rope = new List<Pos>();
+            for (var i = 0; i < RopeLength; i++)
+            {
+                rope.Add(new Pos(0,0));
+            }
 
             foreach (var move in input)
             {
                 for (var i = 0; i < move.Distance; i++)
                 {
-                    head.MoveTo(move.Direction);
-                    tail.Follow(head);
-                    visited.Add(tail);
-                    Console.WriteLine($"{move.Direction} {head.X}/{head.Y} - {tail.X}/{tail.Y}");
+                    rope.First().MoveTo(move.Direction);
+                    for (var j = 1; j < RopeLength; j++)
+                    {
+                        rope[j].Follow(rope[j-1]);
+                    }
+                    visited.Add(rope.Last());
                 }
             }
-            Console.WriteLine(visited.Count);
+            Console.WriteLine($"Puzzle 2: {visited.Count}");
         }
 
         private static List<Move> ReadInput(string fileName)
@@ -49,7 +53,7 @@ namespace Day09
                 result.Add(new Move()
                 {
                     Direction = match.Groups[1].Value,
-                    Distance = Int32.Parse(match.Groups[2].Value),
+                    Distance = int.Parse(match.Groups[2].Value),
                 });
             }
             return result;
@@ -85,36 +89,6 @@ namespace Day09
                     Y -= 1;
                     break;
             }
-
-
-        }
-
-        protected bool Equals(Pos other)
-        {
-            return X == other.X && Y == other.Y;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((Pos) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(X, Y);
-        }
-
-        public static bool operator ==(Pos left, Pos right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(Pos left, Pos right)
-        {
-            return !Equals(left, right);
         }
 
         public void Follow(Pos head)
@@ -143,6 +117,34 @@ namespace Day09
                 this.X += Math.Sign(head.X - this.X);
                 this.Y += Math.Sign(head.Y - this.Y);
             }
+        }
+
+        protected bool Equals(Pos other)
+        {
+            return X == other.X && Y == other.Y;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Pos) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(X, Y);
+        }
+
+        public static bool operator ==(Pos left, Pos right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(Pos left, Pos right)
+        {
+            return !Equals(left, right);
         }
     }
 
