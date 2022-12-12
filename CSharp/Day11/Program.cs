@@ -12,7 +12,7 @@ namespace Day11
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Advent of Code 2022, Day 10");
+            Console.WriteLine("Advent of Code 2022, Day 11");
 
             var monkeys = ReadInput("input.txt");
 
