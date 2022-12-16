@@ -6,11 +6,13 @@ namespace Day15
     {
         public readonly int X;
         public readonly int Y;
+        private readonly int hash;
 
         public Pos(int x, int y)
         {
             X = x;
             Y = y;
+            this.hash = (int)((X << 10) + Y);
         }
 
         protected bool Equals(Pos other)
@@ -28,7 +30,7 @@ namespace Day15
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(X, Y);
+            return hash;
         }
 
         public static bool operator ==(Pos left, Pos right)

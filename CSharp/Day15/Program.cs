@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Day15
 {
@@ -56,7 +55,7 @@ namespace Day15
             // Make a list of "interesting points" - those exactly at the Distance + 1 from a sensor
             var interesting = new HashSet<Pos>();
 
-            Parallel.ForEach(sensors, sensor =>
+            foreach (var sensor in sensors)
             {
                 for (var i = 0; i < sensor.Distance + 1; i++)
                 {
@@ -88,12 +87,9 @@ namespace Day15
                         interesting.Add(new Pos(x, y));
                     }
                 }
-
                 Console.Write("S");
-            });
+            }
             Console.WriteLine($"\nInteresting points: {interesting.Count}");
-            var c = interesting.Contains(new Pos(14, 11));
-
             // Remove interesting points covered by some sensor
             foreach (var sensor in sensors)
             {
