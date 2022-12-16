@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 
 namespace Day16
@@ -22,9 +20,50 @@ namespace Day16
 
         private static void Puzzle2(Dictionary<string, Valve> valves)
         {
-            var current = valves["AA"];
             var interesting = valves.Select(p => p.Value).Where(v => v.FlowRate > 0).ToList();
-            var accessible = interesting.Where(v => FindPath("AA", v.Name, valves).Count < 25).ToList();
+            var n = interesting.Count;
+
+            var maxSum = 0;
+            var current = valves["AA"];
+
+
+
+            for (var i = 0; i < (1 << n); i++)
+            {
+
+                var listOne = new List<Valve>();
+                var listTwo = new List<Valve>();
+
+                for (var j = 0; j < n; j++)
+                {
+                    if ((i & (1 << j)) != 0)
+                    {
+                        listOne.Add(interesting[j]);
+                    }
+                    else
+                    {
+                        listTwo.Add(interesting[j]);
+                    }
+                }
+
+                var bestScoreOne = 0;
+                var bestScoreTwo = 0;
+                FindOrders(current, listOne, 26, new List<string>() { }, valves, 0, ref bestScoreOne);
+                FindOrders(current, listTwo, 26, new List<string>() { }, valves, 0, ref bestScoreTwo);
+
+                if (i % 1000 == 0)
+                {
+                    Console.WriteLine(i);
+                }
+
+                var sum = bestScoreOne + bestScoreTwo;
+                if (sum > maxSum)
+                {
+                    Console.WriteLine(sum);
+                    maxSum = sum;
+                }
+            }
+            Console.WriteLine($"Puzzle 2: {maxSum}");
         }
 
         private static void Puzzle1(Dictionary<string, Valve> valves)
@@ -32,128 +71,29 @@ namespace Day16
 
             var current = valves["AA"];
             var interesting = valves.Select(p => p.Value).Where(v => v.FlowRate > 0).ToList();
-            var visitedNames = new List<string>();
 
+            for (int i = 0; i < interesting.Count; i++)
+            {
+                interesting[i].BitMask = 1 << (i);
+            }
 
             var bestOrder = new List<string>();
-            int bestScore = 0;
+            var bestScore = 0;
             var sw = new Stopwatch();
             sw.Start();
-            FindOrders(current, interesting, 26, new List<string>() {}, valves, 0, ref bestScore, bestOrder);
+            FindOrders(current, interesting, 30, new List<string>() {}, valves, 0, ref bestScore);
             sw.Stop();
             var ell = sw.ElapsedMilliseconds;
 
-            var orderBest = new List<string>
-            {
-                "DD", "BB", "JJ", "HH", "EE", "CC"
-            };
-            var sc = OrderScore(orderBest, valves);
 
-            var order = bestOrder;
-
-
-            int time = 30;
-            
-            var moves = new List<Move>();
-            while (time > 0)
-            {
-                // Take nearest
-                var nextNodeName = order.FirstOrDefault();
-                Valve nextNode = null;
-
-                if (order.Any())
-                {
-                    nextNode = valves[nextNodeName];
-                    order.RemoveAt(0);
-                }
-                else
-                {
-                    nextNode = null;
-                }
-
-                /*
-                var unopenedInteresting =
-                    interesting.Where(v => !moves.Any(m => m.GoTo == v.Name && m.DoOpen)).ToList();
-
-                nextNode = 
-                    unopenedInteresting
-                    .OrderByDescending(v =>
-                        {
-                            var path = FindPath(current.Name, v.Name, valves);
-                            var score =  (time  - path.Count - 1) * v.FlowRate;
-                            return score;
-                        })
-                    .FirstOrDefault(); 
-                */
-                if (nextNode == null)
-                {
-                    time--;
-                    continue;
-                }
-
-                var path = FindPath(current.Name, nextNode.Name, valves);
-                {
-                    if (path.Count < time - 1)
-                    {
-                        Console.WriteLine($"Heading to the valve {nextNode.Name}");
-
-                        foreach (var node in path)
-                        {
-                            time--;
-                            moves.Add(new Move()
-                            {
-                                DoOpen = false,
-                                GoFrom = current.Name,
-                                GoTo = node,
-                                TimeLeft = time
-                            });
-                            Console.WriteLine($"Go from node {current.Name} to {node}. Time left {time}");
-                            current = valves[node];
-                        }
-
-                        moves.Last().DoOpen = true;
-                        time--;
-                        moves.Last().TimeLeft = time;
-                        Console.WriteLine(
-                            $"Opening valve {current.Name} with the flow {current.FlowRate}. Time left {time}");
-                    }
-                }
-            }
-
-            var score = moves.Where(m => m.DoOpen).Select(m => valves[m.GoTo].FlowRate * m.TimeLeft).Sum();
-            Console.WriteLine($"Released pressure: {score}");
-            Console.WriteLine($"There are {interesting.Count} valves with some flow");
-
-            var cl = Console.ForegroundColor;
-            foreach (var move in moves)
-            {
-                Console.ForegroundColor = move.DoOpen ? ConsoleColor.Yellow : cl;
-                Console.Write($"{move.GoTo} ");
-            }
-            Console.ForegroundColor = cl;
-            Console.WriteLine();
+            Console.WriteLine($"Puzzle 1: {bestScore}");
         }
 
-        private static int OrderScore(List<string> order, Dictionary<string, Valve> valves)
-        {
-            var time = 30;
-            var score = 0;
-
-            var current = valves["AA"];
-            foreach (var node in order)
-            {
-                var path = FindPath(current.Name, node, valves);
-                time -= path.Count + 1;
-                score += valves[node].FlowRate * time;
-                current = valves[node];
-            }
-            return score;
-        }
 
         private static void FindOrders(Valve current, List<Valve> interesting, int time, List<string> currentPath,
             Dictionary<string, Valve> valves,
             int score,
-            ref int bestScore, List<string> bestOrder)
+            ref int bestScore)
         {
             foreach (var node in interesting)
             {
@@ -174,12 +114,10 @@ namespace Day16
                     if (newScore > bestScore)
                     {
                         bestScore = newScore;
-//                        bestOrder.Clear();
-//                        bestOrder.AddRange(currentPath);
                     }
                     if (currentPath.Count < interesting.Count)
                     {
-                        FindOrders(node, interesting, newTime, currentPath, valves, newScore, ref bestScore, bestOrder);
+                        FindOrders(node, interesting, newTime, currentPath, valves, newScore, ref bestScore);
                     }
                     currentPath.RemoveAt(currentPath.Count - 1);
                 }
@@ -200,10 +138,10 @@ namespace Day16
             var current = valves[from];
             var unvisited = new HashSet<string>();
             var distances = new Dictionary<string, int>();
-            foreach (var valve in valves)
+            foreach (var valve in valves.Keys)
             {
-                unvisited.Add(valve.Key);
-                distances[valve.Key] = 1000;
+                unvisited.Add(valve);
+                distances[valve] = 1000;
             }
             distances[current.Name] = 0;
 
@@ -241,13 +179,11 @@ namespace Day16
 
             var r1 = new List<string>();
             r1.AddRange(result);
-
             cache[cacheKey] = r1;
 
             result.Reverse();
             var r2 = new List<string>();
             r2.AddRange(result);
-
             cache[$"{to}-{from}"] = r2;
 
             return result;
@@ -282,57 +218,6 @@ namespace Day16
                 valve.LeadsToValves = valve.LeadsToNames.Select(v => dict[v]).ToList();
             }
             return dict;
-        }
-    }
-
-    class Move
-    {
-        public string GoFrom;
-        public string GoTo;
-        public bool DoOpen;
-        public int TimeLeft;
-    }
-
-    [DebuggerDisplay("{Name} - {FlowRate}")]
-    class Valve
-    {
-        protected bool Equals(Valve other)
-        {
-            return Name == other.Name;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((Valve) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return (Name != null ? Name.GetHashCode() : 0);
-        }
-
-        public static bool operator ==(Valve left, Valve right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(Valve left, Valve right)
-        {
-            return !Equals(left, right);
-        }
-
-        public string Name;
-        public int FlowRate;
-        public List<string> LeadsToNames = new List<string>();
-        public List<Valve> LeadsToValves = new List<Valve>();
-
-        public Valve(string name, int flowRate)
-        {
-            Name = name;
-            FlowRate = flowRate;
         }
     }
 }
