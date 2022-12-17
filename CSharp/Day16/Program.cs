@@ -4,12 +4,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Day16
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             Console.WriteLine("Advent of Code 2022, day 16");
             
@@ -20,7 +21,7 @@ namespace Day16
             
             // Solve puzzles
             Puzzle1(valves);
-            Puzzle2(valves);
+            await Puzzle2(valves);
         }
 
         private static void Puzzle1(Dictionary<string, Valve> valves)
@@ -38,7 +39,7 @@ namespace Day16
             Console.WriteLine($"Puzzle 1: {bestScore}, calculated in {sw.ElapsedMilliseconds / 1000.0} seconds");
         }
 
-        private static void Puzzle2(Dictionary<string, Valve> valves)
+        private static async Task Puzzle2(Dictionary<string, Valve> valves)
         {
             var interesting = valves.Select(p => p.Value).Where(v => v.FlowRate > 0).ToList();
             var n = interesting.Count;  
@@ -71,8 +72,13 @@ namespace Day16
 
                 var bestScoreOne = 0;
                 var bestScoreTwo = 0;
-                FindOrders(current, listOne, 26, 0, ExitMaskFor(listOne), 0, ref bestScoreOne);
-                FindOrders(current, listTwo, 26, 0, ExitMaskFor(listTwo), 0, ref bestScoreTwo);
+
+                var tasks = new List<Task>();
+
+                tasks.Add(Task.Run(() => FindOrders(current, listOne, 26, 0, ExitMaskFor(listOne), 0, ref bestScoreOne)));
+                tasks.Add(Task.Run(() => FindOrders(current, listTwo, 26, 0, ExitMaskFor(listTwo), 0, ref bestScoreTwo)));
+
+                await Task.WhenAll(tasks.ToArray());
 
                 if (i > 0 &&  i % 1000 == 0)
                 {
