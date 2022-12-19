@@ -106,6 +106,17 @@ namespace Day19
             return result;
         }
 
+        public void InitNext(ProductionStep next)
+        {
+            next.Ore = this.oreAfter;
+            next.Clay = this.clayAfter;
+            next.Obsidian = this.obsidianAfter;
+
+            next.OreRobots = this.OreRobots + (this.Building == Building.Ore ? 1 : 0);
+            next.ClayRobots = this.ClayRobots + (this.Building == Building.Clay ? 1 : 0);
+            next.ObsidianRobots = this.ObsidianRobots + (this.Building == Building.Obsidian ? 1 : 0);
+        }
+
         public int Score()
         {
             if (Building == Building.Geode)
@@ -135,6 +146,11 @@ namespace Day19
                 Console.WriteLine($"Building: {this.Building}\n");
             }
             Console.ForegroundColor = fg;
+        }
+
+        public ProductionStep Clone()
+        {
+            return (ProductionStep) this.MemberwiseClone();
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Day19
 {
@@ -38,6 +39,10 @@ namespace Day19
             var bestResult = new List<ProductionStep>();
             int bestScore = 0;
 
+            foreach (var minute in Enumerable.Range(1, 23))
+            {
+                result.Add(new ProductionStep(minute, 0,0,0));
+            }
             FindOptimalQuality(current, result, 0, bestResult, ref bestScore);
             return bestResult;
         }
@@ -47,16 +52,25 @@ namespace Day19
         {
             if (current.Minute == 23)
             {
-                if (currentScore > bestScore)
+                if (currentScore <= bestScore)
                 {
-                    bestScore = currentScore;
-                    bestResult.Clear();
-                    bestResult.AddRange(path);
+                    return;
                 }
+                bestScore = currentScore;
+                bestResult.Clear();
+                bestResult.AddRange(path.Select(x => x.Clone()));
                 return;
             }
 
-            var next = current.NextStep();
+            var minutesLeft = 24 - current.Minute;
+            var maxExtraScore = (minutesLeft - 1) * (minutesLeft - 2) / 2;
+            if (currentScore + maxExtraScore < bestScore)
+            {
+                return;
+            }
+
+            var next = path[current.Minute];
+            current.InitNext(next);
 
             var buildings = new List<Building>();
 
@@ -64,12 +78,12 @@ namespace Day19
             {
                 buildings.Add(Building.Geode);
             }
-            else if (next.CanBuildObsidian(this))
-            {
-                buildings.Add(Building.Obsidian);
-            }
             else
             {
+                if (next.CanBuildObsidian(this))
+                {
+                    buildings.Add(Building.Obsidian);
+                }
                 if (next.CanBuildClay(this))
                 {
                     buildings.Add(Building.Clay);
@@ -81,14 +95,12 @@ namespace Day19
                 buildings.Add(Building.None);
             }
 
-            path.Add(next);
             foreach (var building in buildings)
             {
                 next.SetBuilding(this, building);
                 var score = next.Building == Building.Geode ? 24 - next.Minute : 0;
                 FindOptimalQuality(next, path, currentScore + score, bestResult, ref bestScore);
             }
-            path.RemoveAt(path.Count - 1);
         }
     }
 }
