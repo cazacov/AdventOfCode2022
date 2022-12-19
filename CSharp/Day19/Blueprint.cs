@@ -33,6 +33,7 @@ namespace Day19
                 Ore = -1,
                 Building = Building.None
             };
+            current.SetBuilding(this, Building.None);
             var result = new List<ProductionStep>();
             var bestResult = new List<ProductionStep>();
             int bestScore = 0;
@@ -55,7 +56,7 @@ namespace Day19
                 return;
             }
 
-            var next = current.NextStep(this);
+            var next = current.NextStep();
 
             var buildings = new List<Building>();
 
@@ -83,9 +84,9 @@ namespace Day19
             path.Add(next);
             foreach (var building in buildings)
             {
-                next.Building = building;
-                var score = next.Score();
-                FindOptimalQuality(next, path, currentScore + next.Score(), bestResult, ref bestScore);
+                next.SetBuilding(this, building);
+                var score = next.Building == Building.Geode ? 24 - next.Minute : 0;
+                FindOptimalQuality(next, path, currentScore + score, bestResult, ref bestScore);
             }
             path.RemoveAt(path.Count - 1);
         }

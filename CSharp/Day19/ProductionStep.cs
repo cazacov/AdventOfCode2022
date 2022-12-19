@@ -16,13 +16,48 @@ namespace Day19
     class ProductionStep
     {
         public int Minute;
-        public Building Building = Building.None;
         public int Ore;
         public int Clay;
         public int Obsidian;
+
         public int OreRobots;
         public int ClayRobots;
         public int ObsidianRobots;
+
+        public Building Building;
+
+        private int oreAfter;
+        private int clayAfter;
+        private int obsidianAfter;
+
+        public void SetBuilding(Blueprint blueprint, Building newValue)
+        {
+            {
+                this.Building = newValue;
+                oreAfter = this.Ore + this.OreRobots;
+                clayAfter = this.Clay + this.ClayRobots;
+                obsidianAfter = this.Obsidian + this.ObsidianRobots;
+                switch (newValue)
+                {
+                    case Building.None:
+                        break;
+                    case Building.Ore:
+                        oreAfter -= blueprint.OreOreCost;
+                        break;
+                    case Building.Clay:
+                        oreAfter -= blueprint.ClayOreCost;
+                        break;
+                    case Building.Obsidian:
+                        oreAfter -= blueprint.ObsidianOreCost;
+                        clayAfter -= blueprint.ObsidianClayCost;
+                        break;
+                    case Building.Geode:
+                        oreAfter -= blueprint.GeodeOreCost;
+                        obsidianAfter -= blueprint.GeodeObsidianCost;
+                        break;
+                }
+            }
+        }
 
         public ProductionStep(int minute, int ore, int clay, int obsidian)
         {
@@ -54,72 +89,20 @@ namespace Day19
                    && this.Obsidian >= blueprint.GeodeObsidianCost;
         }
 
-        private int ClayCost(Building building, Blueprint blueprint)
-        {
-            switch (building)
-            {
-                case Building.None:
-                case Building.Ore:
-                case Building.Clay:
-                case Building.Geode:
-                    return 0;
-                case Building.Obsidian:
-                    return blueprint.ObsidianClayCost;
-                default:
-                    return 0;
-            }
-        }
-
-        private int OreCost(Building building, Blueprint blueprint)
-        {
-            switch (building)
-            {
-                case Building.None:
-                    return 0;
-                case Building.Ore:
-                    return blueprint.OreOreCost;
-                case Building.Clay:
-                    return blueprint.ClayOreCost;
-                case Building.Obsidian:
-                    return blueprint.ObsidianOreCost;
-                case Building.Geode:
-                    return blueprint.GeodeOreCost;
-                default:
-                    return 0;
-            }
-        }
-
-
-        private int ObsidianCost(Building building, Blueprint blueprint)
-        {
-            switch (building)
-            {
-                case Building.None:
-                case Building.Ore:
-                case Building.Clay:
-                case Building.Obsidian:
-                    return 0;
-                case Building.Geode:
-                    return blueprint.GeodeObsidianCost;
-                default:
-                    return 0;
-            }
-        }
-
-        public ProductionStep NextStep(Blueprint blueprint)
+        
+        public ProductionStep NextStep()
         {
             var result = new ProductionStep(
                 this.Minute + 1,
-                this.Ore + this.OreRobots - OreCost(this.Building, blueprint),
-                this.Clay + this.ClayRobots - ClayCost(this.Building, blueprint),
-                this.Obsidian + this.ObsidianRobots - ObsidianCost(this.Building, blueprint)
+                this.oreAfter,
+                this.clayAfter,
+                this.obsidianAfter
             )
             {
                 OreRobots = this.OreRobots + (this.Building == Building.Ore ? 1 : 0),
                 ClayRobots = this.ClayRobots + (this.Building == Building.Clay ? 1 : 0),
                 ObsidianRobots = this.ObsidianRobots + (this.Building == Building.Obsidian ? 1 : 0)
             };
-
             return result;
         }
 
