@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Day19
 {
@@ -22,6 +23,71 @@ namespace Day19
             ObsidianClayCost = obsidianClayCost;
             GeodeOreCost = geodeOreCost;
             GeodeObsidianCost = geodeObsidianCost;
+        }
+
+        public List<ProductionStep> FindOptimalQuality()
+        {
+            var current = new ProductionStep(0, 0, 0, 0)
+            {
+                OreRobots = 1,
+                Ore = -1,
+                Building = Building.None
+            };
+            var result = new List<ProductionStep>();
+            var bestResult = new List<ProductionStep>();
+            int bestScore = 0;
+
+            FindOptimalQuality(current, result, 0, bestResult, ref bestScore);
+            return bestResult;
+        }
+
+        private void FindOptimalQuality(ProductionStep current, List<ProductionStep> path, int currentScore,
+            List<ProductionStep> bestResult, ref int bestScore)
+        {
+            if (current.Minute == 23)
+            {
+                if (currentScore > bestScore)
+                {
+                    bestScore = currentScore;
+                    bestResult.Clear();
+                    bestResult.AddRange(path);
+                }
+                return;
+            }
+
+            var next = current.NextStep(this);
+
+            var buildings = new List<Building>();
+
+            if (next.CanBuildGeode(this))
+            {
+                buildings.Add(Building.Geode);
+            }
+            else if (next.CanBuildObsidian(this))
+            {
+                buildings.Add(Building.Obsidian);
+            }
+            else
+            {
+                if (next.CanBuildClay(this))
+                {
+                    buildings.Add(Building.Clay);
+                }
+                if (next.CanBuildOre(this))
+                {
+                    buildings.Add(Building.Ore);
+                }
+                buildings.Add(Building.None);
+            }
+
+            path.Add(next);
+            foreach (var building in buildings)
+            {
+                next.Building = building;
+                var score = next.Score();
+                FindOptimalQuality(next, path, currentScore + next.Score(), bestResult, ref bestScore);
+            }
+            path.RemoveAt(path.Count - 1);
         }
     }
 }

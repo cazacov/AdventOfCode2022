@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Day19
 {
@@ -11,6 +12,7 @@ namespace Day19
         Geode
     }
 
+    [DebuggerDisplay("{Minute} {Building}")]
     class ProductionStep
     {
         public int Minute;
@@ -106,12 +108,19 @@ namespace Day19
 
         public ProductionStep NextStep(Blueprint blueprint)
         {
-            return new ProductionStep(
+            var result = new ProductionStep(
                 this.Minute + 1,
                 this.Ore + this.OreRobots - OreCost(this.Building, blueprint),
                 this.Clay + this.ClayRobots - ClayCost(this.Building, blueprint),
                 this.Obsidian + this.ObsidianRobots - ObsidianCost(this.Building, blueprint)
-            );
+            )
+            {
+                OreRobots = this.OreRobots + (this.Building == Building.Ore ? 1 : 0),
+                ClayRobots = this.ClayRobots + (this.Building == Building.Clay ? 1 : 0),
+                ObsidianRobots = this.ObsidianRobots + (this.Building == Building.Obsidian ? 1 : 0)
+            };
+
+            return result;
         }
 
         public int Score()
