@@ -15,6 +15,7 @@ namespace Day19
             var blueprints = ReadInput("input.txt");
 
             Puzzle1(blueprints);
+            Puzzle2(blueprints);
         }
 
         private static void Puzzle1(List<Blueprint> blueprints)
@@ -24,6 +25,7 @@ namespace Day19
             sw.Start();
             foreach (var blueprint in blueprints)
             {
+                blueprint.MaxMinutes = 24;
                 Console.Write($"Blueprint {blueprint.ID}...");
                 var score = BluebrintScore(blueprint);
                 Console.WriteLine($" score: {score}");
@@ -33,12 +35,27 @@ namespace Day19
             Console.WriteLine($"Puzzle 1 solution: {sum}, solved in {sw.ElapsedMilliseconds / 1000.0} seconds");
         }
 
+        private static void Puzzle2(List<Blueprint> blueprints)
+        {
+            var mul = 1;
+            var sw = new Stopwatch();
+            sw.Start();
+            foreach (var blueprint in blueprints.Take(3))
+            {
+                blueprint.MaxMinutes = 32;
+                Console.Write($"Blueprint {blueprint.ID}...");
+                var score = BluebrintScore(blueprint);
+                Console.WriteLine($" score: {score}");
+                mul *= score;
+            }
+            sw.Stop();
+            Console.WriteLine($"Puzzle 12solution: {mul}, solved in {sw.ElapsedMilliseconds / 1000.0} seconds");
+        }
+
         private static int BluebrintScore(Blueprint blueprint)
         {
             var result = blueprint.FindOptimalQuality();
-
-            var geodeOpened = result.Sum(ps => ps.Score());
-            //Console.WriteLine($"Blueprint {blueprint.ID} can open {geodeOpened} geodes in 24 minutes");
+            var geodeOpened = result.Sum(ps => ps.Score(blueprint.MaxMinutes));
             return geodeOpened;
         }
 

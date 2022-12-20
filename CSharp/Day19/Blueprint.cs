@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
@@ -14,6 +15,7 @@ namespace Day19
         public readonly int ObsidianClayCost;
         public readonly int GeodeOreCost;
         public readonly int GeodeObsidianCost;
+        public readonly int MaxOre; 
 
         public Blueprint(int id, int oreOreCost, int clayOreCost, int obsidianOreCost, int obsidianClayCost, int geodeOreCost, int geodeObsidianCost)
         {
@@ -24,7 +26,11 @@ namespace Day19
             ObsidianClayCost = obsidianClayCost;
             GeodeOreCost = geodeOreCost;
             GeodeObsidianCost = geodeObsidianCost;
+
+            MaxOre = Math.Max(Math.Max(ClayOreCost, ObsidianOreCost), GeodeOreCost);
         }
+
+        public int MaxMinutes { get; set; }
 
         public List<ProductionStep> FindOptimalQuality()
         {
@@ -39,7 +45,7 @@ namespace Day19
             var bestResult = new List<ProductionStep>();
             int bestScore = 0;
 
-            foreach (var minute in Enumerable.Range(1, 23))
+            foreach (var minute in Enumerable.Range(1, MaxMinutes - 1))
             {
                 result.Add(new ProductionStep(minute, 0,0,0));
             }
@@ -50,7 +56,7 @@ namespace Day19
         private void FindOptimalQuality(ProductionStep current, List<ProductionStep> path, int currentScore,
             List<ProductionStep> bestResult, ref int bestScore)
         {
-            if (current.Minute == 23)
+            if (current.Minute == MaxMinutes - 1)
             {
                 if (currentScore <= bestScore)
                 {
@@ -62,8 +68,8 @@ namespace Day19
                 return;
             }
 
-            var minutesLeft = 24 - current.Minute;
-            var maxExtraScore = (minutesLeft - 1) * (minutesLeft - 2) / 2;
+            var minutesLeft = MaxMinutes - current.Minute;
+            var maxExtraScore = (minutesLeft) * (minutesLeft - 1) / 2;
             if (currentScore + maxExtraScore < bestScore)
             {
                 return;
@@ -78,27 +84,31 @@ namespace Day19
             {
                 buildings.Add(Building.Geode);
             }
-            else
+
+            if (next.ObsidianRobots < this.GeodeObsidianCost)
             {
-                if (next.CanBuildObsidian(this))
+                if (next.ObsidianRobots < this.GeodeObsidianCost && next.CanBuildObsidian(this))
                 {
                     buildings.Add(Building.Obsidian);
                 }
-                if (next.CanBuildClay(this))
+
+                if (next.ClayRobots < this.ObsidianClayCost && next.CanBuildClay(this))
                 {
                     buildings.Add(Building.Clay);
                 }
-                if (next.CanBuildOre(this))
+
+                if (next.OreRobots < this.MaxOre && next.CanBuildOre(this))
                 {
                     buildings.Add(Building.Ore);
                 }
-                buildings.Add(Building.None);
             }
+            buildings.Add(Building.None);
+            
 
             foreach (var building in buildings)
             {
                 next.SetBuilding(this, building);
-                var score = next.Building == Building.Geode ? 24 - next.Minute : 0;
+                var score = next.Building == Building.Geode ? MaxMinutes - next.Minute : 0;
                 FindOptimalQuality(next, path, currentScore + score, bestResult, ref bestScore);
             }
         }

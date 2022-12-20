@@ -117,11 +117,11 @@ namespace Day19
             next.ObsidianRobots = this.ObsidianRobots + (this.Building == Building.Obsidian ? 1 : 0);
         }
 
-        public int Score()
+        public int Score(int maxMinutes)
         {
             if (Building == Building.Geode)
             {
-                return 24 - this.Minute;
+                return maxMinutes - this.Minute;
             }
             else
             {
@@ -129,7 +129,7 @@ namespace Day19
             }
         }
 
-        public void Print()
+        public void Print(int maxMinutes)
         {
             var fg = Console.ForegroundColor;
 
@@ -139,7 +139,7 @@ namespace Day19
             if (this.Building == Building.Geode)
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"Building: {this.Building}, score {this.Score()}\n");
+                Console.WriteLine($"Building: {this.Building}, score {this.Score(maxMinutes)}\n");
             }
             else
             {
