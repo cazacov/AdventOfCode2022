@@ -13,20 +13,12 @@ namespace Day20
             Console.WriteLine("Advent of Code 2022, day 20");
 
             var encrypted = ReadInput("input.txt");
-
-            var numbers = new List<Num>();
-            for (var i = 0; i < encrypted.Count; i++)
-            {
-                numbers.Add(new Num(i, encrypted[i]));
-            }
+            
+            var numbers = encrypted.Select((number, position) => new Num(position, number)).ToList();
             Console.WriteLine($"Puzzle 1: {Puzzle(numbers, 1)}");
 
-            var encryptionKey = 811589153L;
-            numbers.Clear();
-            for (var i = 0; i < encrypted.Count; i++)
-            {
-                numbers.Add(new Num(i, encryptionKey * encrypted[i]));
-            }
+            const long encryptionKey = 811589153L;
+            numbers = encrypted.Select((number, position) => new Num(position, encryptionKey * number)).ToList();
             Console.WriteLine($"Puzzle 2: {Puzzle(numbers, 10)}");
         }
 
