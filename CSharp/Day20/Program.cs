@@ -26,11 +26,12 @@ namespace Day20
         {
             var n = numbers.Count;
 
+
             for (var j = 0; j < iterations; j++)
             {
-                for (var i = 0; i < n; i++)
+                for (var initialPosition = 0; initialPosition < n; initialPosition++)
                 {
-                    var index = numbers.FindIndex(x => x.Position == i);
+                    var index = numbers.FindIndex(x => x.Position == initialPosition);
                     var elem = numbers[index];
 
                     if (elem.Value > 0)
