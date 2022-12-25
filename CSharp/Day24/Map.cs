@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 
 namespace Day24
 {
@@ -12,7 +13,9 @@ namespace Day24
         public int MaxY;
         public Pos Start;
         public Pos Finish;
-        public HashSet<Pos> SafeLocations = new HashSet<Pos>();
+        public int Step { get; private set; }
+        private readonly Dictionary<int, HashSet<Pos>> snapshots = new Dictionary<int, HashSet<Pos>>();
+        public List<Command> BestPath = new List<Command>();
 
         public static Map ReadFromFile(string fileName)
         {
@@ -34,7 +37,6 @@ namespace Day24
                 {
                     if (line[x + 1] == '.')
                     {
-                        map.SafeLocations.Add(new Pos(x, y));
                         continue;
                     }
                     map.Blizzards.Add(new Blizzard(
@@ -48,24 +50,108 @@ namespace Day24
                         x,y));
                 }
             }
+            map.MakeSnapshot();
             return map;
         }
 
+        static readonly Command[] allCommands = { Command.Wait, Command.Right, Command.Down, Command.Left, Command.Up };
+
+        public void FindPath(Pos current, int step, List<Command> path, ref int upperBound, ref int stepBack)
+        {
+            if (current == Finish)
+            {
+                BestPath.Clear();
+                BestPath.AddRange(path);
+                Console.WriteLine($"Find a path of length {path.Count}");
+                upperBound = path.Count - 1;
+                return;
+            }
+
+            if (step >= upperBound)
+            {
+                return;
+            }
+
+            var safeLocations = this.SafeLocationsAtStep(step + 1);
+
+            var moves = new List<Move>();
+            foreach (var command in allCommands)
+            {
+                var nextPos = current.Go(command);
+                if (nextPos.X >= this.MaxX || nextPos.Y >= this.MaxY || nextPos.X < 0 || nextPos.Y < 0)
+                {
+                    continue;
+                }
+                if (safeLocations.Contains(nextPos))
+                {
+                    moves.Add(new Move()
+                    {
+                        Command = command,
+                        Position = nextPos,
+                        Cost = path.Count + this.Cost(nextPos, this.Finish)
+                    });
+                }
+            }
+            moves.Sort(0, moves.Count, Move.CostComparer);
+
+            foreach (var move in moves)
+            {
+                path.Add(move.Command);
+                FindPath(move.Position, step + 1, path, ref upperBound, ref stepBack);
+                path.RemoveAt(path.Count - 1);
+            }
+
+            if (step < stepBack)
+            {
+                stepBack = step;
+                Console.WriteLine($"Step back to {step}");
+            }
+        }
+
+
         public void NextStep()
         {
-            this.SafeLocations.Clear();
+            foreach (var blizzard in Blizzards)
+            {
+                blizzard.MakeStep(this.MaxX, this.MaxY);
+            }
+            Step++;
+            MakeSnapshot();
+        }
+
+        private void MakeSnapshot()
+        {
+            var safeLocations = new HashSet<Pos>();
             for (var x = 0; x < MaxX; x++)
             {
                 for (var y = 0; y < MaxY; y++)
                 {
-                    SafeLocations.Add(new Pos(x, y));
+                    safeLocations.Add(new Pos(x, y));
                 }
             }
-
             foreach (var blizzard in Blizzards)
             {
-                SafeLocations.Remove(blizzard.MakeStep(this.MaxX, this.MaxY));
+                safeLocations.Remove(blizzard.Position);
             }
+            snapshots[Step] = safeLocations;
+        }
+
+        public HashSet<Pos> SafeLocationsAtStep(int stepNr)
+        {
+            while (this.Step < stepNr)
+            {
+                this.NextStep();
+            }
+            return snapshots[stepNr];
+        }
+
+        public int Cost(Pos from, Pos to)
+        {
+            return Math.Abs(from.X - to.X) + Math.Abs(from.Y - to.Y);
+/*
+            var dx = from.X - to.X;
+            var dy = from.Y - to.Y;
+            return (int) (Math.Sqrt(dx * dx + dy * dy) * 10); */
         }
     }
 
@@ -114,11 +200,13 @@ namespace Day24
     {
         public readonly int X;
         public readonly int Y;
+        private readonly int hashCode;
 
         public Pos(int x, int y)
         {
             X = x;
             Y = y;
+            this.hashCode = x * 100 + y;
         }
 
         public Pos Go(Command command)
@@ -139,7 +227,6 @@ namespace Day24
             }
         }
 
-
         protected bool Equals(Pos other)
         {
             return X == other.X && Y == other.Y;
@@ -147,15 +234,13 @@ namespace Day24
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((Pos)obj);
+            return this.hashCode == (obj as Pos).hashCode;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(X, Y);
+            return hashCode;
         }
 
         public static bool operator ==(Pos left, Pos right)
