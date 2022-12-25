@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography;
 
 namespace Day24
 {
     class Map
     {
         public List<Blizzard> Blizzards = new List<Blizzard>();
-        public int MaxX;
-        public int MaxY;
+        public HashSet<Pos> Walls = new HashSet<Pos>();
+        public int Width;
+        public int Height;
         public Pos Start;
         public Pos Finish;
         public int Step { get; private set; }
@@ -23,24 +23,30 @@ namespace Day24
 
             var map = new Map()
             {
-                MaxX = lines[0].Length - 2,
-                MaxY = lines.Length - 2,
+                Width = lines[0].Length,
+                Height = lines.Length,
             };
-            map.Start = new Pos(0, 0);
-            map.Finish = new Pos(map.MaxX - 1, map.MaxY - 1);
 
+            map.Start = new Pos(lines[0].IndexOf('.'), 0);
+            map.Finish = new Pos(lines[map.Height - 1].IndexOf('.'), map.Height - 1);
 
-            for (var y = 0; y < map.MaxY; y++)
+            for (var y = 0; y < map.Height; y++)
             {
-                var line = lines[y + 1];
-                for (var x = 0; x < map.MaxX; x++)
+                var line = lines[y];
+                for (var x = 0; x < map.Width; x++)
                 {
-                    if (line[x + 1] == '.')
+                    if (line[x] == '.')
                     {
                         continue;
                     }
+                    if (line[x] == '#')
+                    {
+                        map.Walls.Add(new Pos(x, y));
+                        continue;
+                    }
+
                     map.Blizzards.Add(new Blizzard(
-                        line[x + 1] switch
+                        line[x] switch
                         {
                             '^' => 0,
                             '>' => 1,
@@ -78,7 +84,7 @@ namespace Day24
             foreach (var command in allCommands)
             {
                 var nextPos = current.Go(command);
-                if (nextPos.X >= this.MaxX || nextPos.Y >= this.MaxY || nextPos.X < 0 || nextPos.Y < 0)
+                if (nextPos.X == this.Width || nextPos.X == 0)
                 {
                     continue;
                 }
@@ -113,7 +119,7 @@ namespace Day24
         {
             foreach (var blizzard in Blizzards)
             {
-                blizzard.MakeStep(this.MaxX, this.MaxY);
+                blizzard.MakeStep(this.Width, this.Height);
             }
             Step++;
             MakeSnapshot();
@@ -122,13 +128,14 @@ namespace Day24
         private void MakeSnapshot()
         {
             var safeLocations = new HashSet<Pos>();
-            for (var x = 0; x < MaxX; x++)
+            for (var x = 0; x < Width; x++)
             {
-                for (var y = 0; y < MaxY; y++)
+                for (var y = 0; y < Height; y++)
                 {
                     safeLocations.Add(new Pos(x, y));
                 }
             }
+            safeLocations.ExceptWith(this.Walls);
             foreach (var blizzard in Blizzards)
             {
                 safeLocations.Remove(blizzard.Position);
@@ -171,9 +178,24 @@ namespace Day24
             var dx = new int[] { 0, 1, 0, -1 };
             var dy = new int[] { -1, 0, 1, 0 };
 
-            var x = (this.Position.X + dx[Direction] + maxX) % maxX;
-            var y = (this.Position.Y + dy[Direction] + maxY) % maxY;
-
+            var x = this.Position.X + dx[Direction];
+            if (x == 0)
+            {
+                x = maxX - 2;
+            }
+            if (x == maxX - 1)
+            {
+                x = 1;
+            }
+            var y = this.Position.Y + dy[Direction];
+            if (y == 0)
+            {
+                y = maxY - 2;
+            }
+            if (y == maxY - 1)
+            {
+                y = 1;
+            }
             this.Position = new Pos(x, y);
 
             return this.Position;

@@ -18,30 +18,33 @@ namespace Day24
         {
             var path = new List<Command>();
 
-            // Enter the map
-            do
+            var safeLocations = map.SafeLocationsAtStep(1);
+            for (var y = 0; y < map.Height; y++)
             {
-                map.NextStep();
-                if (map.SafeLocationsAtStep(map.Step).Contains(map.Start))
+                for (var x = 0; x < map.Width; x++)
                 {
-                    path.Add(Command.Down);
-                    break;
+                    var pos = new Pos(x, y);
+
+                    if (map.Walls.Contains(pos))
+                    {
+                        Console.Write("#");
+                        continue;
+                    }
+                    Console.Write(safeLocations.Contains(new Pos(x, y)) ? "." : "?");
                 }
-                path.Add(Command.Wait);
-            } while (true);
+                Console.WriteLine();
+            }
 
             // Walk through
             var upperBound = 300;
 
-            var initStep = map.Step;
-
             do
             {
-                path = path.Take(initStep).ToList();
+                path.Clear();
                 Console.WriteLine($"trying upper bound {upperBound}");
                 var current = map.Start;
                 var stepBack = Int32.MaxValue;
-                map.FindPath(current, initStep, path, ref upperBound, ref stepBack);
+                map.FindPath(current, 0, path, ref upperBound, ref stepBack);
                 if (map.BestPath.Any())
                 {
                     break;
@@ -49,25 +52,16 @@ namespace Day24
                 upperBound = (int) (upperBound * 1.1);
             } while (true);
 
-            // Exit the map
-            map.BestPath.Add(Command.Down);
 
             Console.WriteLine($"Puzzle 1: Exit reached in { map.BestPath.Count} minutes");
-            var safeLocations = map.SafeLocationsAtStep(map.BestPath.Count);
 
-            for (var y = 0; y < map.MaxY; y++)
+            for (int i = 0; i < map.BestPath.Count; i++)
             {
-                for (var x = 0; x < map.MaxX; x++)
-                {
-                    Console.Write(safeLocations.Contains(new Pos(x, y)) ? "." : "#");
-                }
-                Console.WriteLine();
+                Console.WriteLine($"Minute {i+1}, move {map.BestPath[i]}");
             }
+
+            
         }
-
-        
-
-        
     }
 
     internal class Move
