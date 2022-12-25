@@ -217,6 +217,58 @@ namespace Day24
         Left
     }
 
+    [DebuggerDisplay("{X}, {Y}, {T}")]
+    class MinPos
+    {
+        public readonly int X;
+        public readonly int Y;
+        public readonly int T;
+
+        public MinPos(int x, int y, int t)
+        {
+            X = x;
+            Y = y;
+            T = t;
+        }
+
+        public MinPos(Pos position, int t)
+        {
+            X = position.X;
+            Y = position.Y;
+            T = t;
+        }
+
+
+        protected bool Equals(MinPos other)
+        {
+            return X == other.X && Y == other.Y && T == other.T;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((MinPos) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(X, Y, T);
+        }
+
+        public static bool operator ==(MinPos left, MinPos right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(MinPos left, MinPos right)
+        {
+            return !Equals(left, right);
+        }
+    }
+
+
     [DebuggerDisplay("{X}, {Y}")]
     class Pos
     {

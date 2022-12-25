@@ -12,8 +12,84 @@ namespace Day24
 
             var map = Map.ReadFromFile("input.txt");
             Puzzle1(map);
+            Puzzle2(map);
         }
 
+        static readonly Command[] allCommands = { Command.Right, Command.Down, Command.Wait, Command.Left, Command.Up };
+
+        private static void Puzzle1(Map map)
+        {
+            var result = FindPathLength(map, map.Start, map.Finish, 0);
+            Console.WriteLine($"Puzzle 1: {result}");
+        }
+
+        private static void Puzzle2(Map map)
+        {
+            var trip1 = FindPathLength(map, map.Start, map.Finish, 0);
+            Console.WriteLine($"Trip 1: {trip1}");
+
+            var trip2 = FindPathLength(map, map.Finish, map.Start, trip1);
+            Console.WriteLine($"Trip 2: {trip2}");
+
+            var trip3 = FindPathLength(map, map.Start, map.Finish, trip1 + trip2);
+            Console.WriteLine($"Trip 2: {trip3}");
+
+            Console.WriteLine($"Puzzle 2: {trip1 + trip2 + trip3}");
+        }
+
+
+        private static int FindPathLength(Map map, Pos start, Pos finish, int startTime)
+        {
+            var unvisited = new HashSet<MinPos>();
+            var visited = new HashSet<MinPos>();
+            int upperBound = Int32.MaxValue;
+
+            unvisited.Add(new MinPos(start, startTime));
+            do
+            {
+                var minT = unvisited.Min(x => x.T);
+                var current = unvisited.First(x => x.T == minT);
+
+                if (current.T >= upperBound)
+                {
+                    unvisited.Remove(current);
+                    continue;
+                }
+
+                var curPos = new Pos(current.X, current.Y);
+                var safeLocations = map.SafeLocationsAtStep(current.T + 1);
+
+                foreach (var command in allCommands)
+                {
+                    var nextPos = curPos.Go(command);
+
+                    if (nextPos == finish)
+                    {
+                        upperBound = current.T + 1;
+                        Console.WriteLine($"Found a path of length {upperBound}");
+                    }
+                    else
+                    {
+                        if (safeLocations.Contains(nextPos))
+                        {
+                            var nextMin = new MinPos(nextPos.X, nextPos.Y, current.T + 1);
+                            if (!visited.Contains(nextMin))
+                            {
+                                unvisited.Add(nextMin);
+                            }
+                        }
+                    }
+                }
+
+                visited.Add(current);
+                unvisited.Remove(current);
+            } while (unvisited.Any());
+
+            return upperBound - startTime;
+        }
+
+
+        /*
         private static void Puzzle1(Map map)
         {
             var path = new List<Command>();
@@ -61,8 +137,8 @@ namespace Day24
             }
 
             
-        }
-    }
+        } */
+    } 
 
     internal class Move
     {
