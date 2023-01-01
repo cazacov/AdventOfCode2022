@@ -2,6 +2,9 @@
 #include <fstream>
 #include <vector>
 #include <numeric>
+#include <algorithm>
+#include <string>
+
 
 std::vector<std::vector<int>> readInput(const std::string& fileName) {
 
@@ -55,6 +58,8 @@ void puzzle2(std::vector<std::vector<int>> &inventories) {
                    }
     );
 
+
+
     int first {0};
     int second {0};
     int third {0};
@@ -80,7 +85,7 @@ void puzzle2(std::vector<std::vector<int>> &inventories) {
 int main() {
     std::cout << "Advent of Code 2022, day 1" << std::endl;
 
-    auto input = readInput("..\\input.txt");
+    auto input = readInput("input.txt");
 
     puzzle1(input);
     puzzle2(input);
