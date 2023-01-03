@@ -4,6 +4,7 @@
 #include <numeric>
 #include <algorithm>
 #include <string>
+#include <ranges>
 
 
 std::vector<std::vector<int>> readInput(const std::string& fileName) {
@@ -13,11 +14,16 @@ std::vector<std::vector<int>> readInput(const std::string& fileName) {
     std::ifstream input;
     input.open(fileName, std::ios::in);
 
-    std::vector<int> accumulator;
-    while (!input.eof()) {
-        std::string line;
-        std::getline(input, line);
 
+    for (auto s: std::ranges::istream_view<std::string>(input)) {
+        std::cout << s << std::endl;
+    }
+
+
+    std::vector<int> accumulator;
+
+    std::string line;
+    while (std::getline(input, line)) {
         if (line.empty()) {
             auto inventory = accumulator;
             result.push_back(inventory);
